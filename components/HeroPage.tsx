@@ -1,249 +1,248 @@
 "use client";
 
-import React, { Suspense, useState, useRef } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, useGLTF, Environment, ContactShadows, Float } from "@react-three/drei";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import React, { Suspense, useState, useRef, useMemo } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { 
+  useGLTF, 
+  Environment, 
+  ContactShadows, 
+  Float, 
+  Html,
+  PerspectiveCamera,
+  Stars,
+  OrbitControls
+} from "@react-three/drei";
+import { motion, AnimatePresence } from "framer-motion";
+import * as THREE from "three";
 
-// Model component to load and display the GLB
-function Model({ url }: { url: string }) {
+const ISLANDS = [
+  { name: "Sumatera", url: "./PulauSumatera.glb", initialScale: 15, mapX: -14, mapZ: -5 },
+  { name: "Jawa", url: "./PulauJawa.glb", initialScale: 10, mapX: -4, mapZ: 6 },
+  { name: "Kalimantan", url: "./PulauKalimantan.glb", initialScale: 15, mapX: 2, mapZ: -10 },
+  { name: "Sulawesi", url: "./PulauSulawesi.glb", initialScale: 11, mapX: 7, mapZ: 5 },
+  { name: "Papua", url: "./PulauPapua.glb", initialScale: 12, mapX: 20, mapZ: 2 },
+];
+
+function Model({ url, isHovered, initialScale = 1 }: { url: string; isHovered: boolean; initialScale?: number }) {
   const { scene } = useGLTF(url);
+  const clonedScene = useMemo(() => scene ? scene.clone() : null, [scene]);
+  const groupRef = useRef<THREE.Group>(null);
+  
+  useFrame((state, delta) => {
+    if (groupRef.current) {
+      const targetScale = isHovered ? initialScale * 1.3 : initialScale;
+      const s = THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, 0.1);
+      groupRef.current.scale.set(s, s, s);
+    }
+  });
+
+  if (!scene) return null; // ga ada kotak
+
+return (
+  <group ref={groupRef}>
+    {clonedScene && (
+      <primitive
+        object={clonedScene}
+        position={[0, 0, 0]}
+        rotation={[0, 0, 0]}
+      />
+    )}
+  </group>
+);
+
+}
+
+function Island({ 
+  name, 
+  url, 
+  index, 
+  total, 
+  activeName, 
+  setActiveName,
+  initialScale,
+  mapX,
+  mapZ
+}: { 
+  name: string; 
+  url: string; 
+  index: number; 
+  total: number;
+  activeName: string | null;
+  setActiveName: (name: string | null) => void;
+  initialScale: number;
+  mapX: number;
+  mapZ: number;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+  const isSelected = activeName === name;
+
+  const x = mapX;
+  const z = mapZ;
+  const y = 0.5; 
+
+  const labelPosition: [number, number, number] = name === "Papua" ? [6, 1, 0] : [2.5, 1, 0];
+
   return (
-    <primitive 
-      object={scene} 
-      scale={2.5} 
-      position={[0, 0, 0]} 
-      rotation={[0, 4.4, 0]}
-    />
+    <group 
+      position={[x, y, z]} 
+      onClick={(e) => {
+        e.stopPropagation();
+        setActiveName(isSelected ? null : name);
+      }}
+      onPointerEnter={() => !activeName && setActiveName(name)} // Preview jika belum ada yang fix dipilih
+      onPointerLeave={() => activeName === name && !isSelected && setActiveName(null)}
+    >
+      <Float 
+        speed={isSelected ? 2 : 1.5} 
+        rotationIntensity={isSelected ? 0.3 : 0.1} 
+        floatIntensity={isSelected ? 0.4 : 0.1}
+      >
+        <Model url={url} isHovered={isSelected} initialScale={initialScale} />
+      </Float>
+
+      <Html
+        position={labelPosition}
+        center
+        distanceFactor={10}
+        pointerEvents="none"
+      >
+        <div className="flex flex-col items-start select-none">
+          <motion.h3 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ 
+                opacity: 1, 
+                x: 0,
+                scale: isSelected ? 1.3 : 1,
+            }}
+            className={`text-2xl md:text-4xl font-black whitespace-nowrap drop-shadow-lg uppercase tracking-tighter transition-colors duration-300 ${isSelected ? 'text-[#543310]' : 'text-[#74512D]/60'}`}
+          >
+            {name}
+          </motion.h3>
+          <motion.div 
+            animate={{ width: isSelected ? "100%" : "0%" }}
+            className="h-2 bg-[#AF8F6F] rounded-full mt-0" 
+          />
+        </div>
+      </Html>
+
+      {/* Tombolbawah pulau */}
+      <Html
+        position={[0, -5, 0]}
+        center
+        distanceFactor={10}
+      >
+        <AnimatePresence>
+          {isSelected && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.5, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.5, y: 20 }}
+              // whileHover={{ scale: 1.05, backgroundColor: "#543310" }}
+              whileTap={{ scale: 0.95 }}
+              className="px-16 py-10 bg-[#74512D] text-[#F8F4E1] rounded-full font-black shadow-[0_20px_50px_rgba(84,51,16,0.6)] border-4 border-[#AF8F6F] whitespace-nowrap uppercase tracking-widest text-4xl z-50 pointer-events-auto mb-12"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log(`Navigating to ${name}`);
+              }}
+            >
+              Eksplorasi {name}
+            </motion.button>
+          )}
+        </AnimatePresence>
+      </Html>
+    </group>
   );
 }
 
-interface HeroItemProps {
-  title: string;
-  modelUrl: string;
-}
-
-function HeroItem({ title, modelUrl }: HeroItemProps) {
-  const [isHovered, setIsHovered] = useState(false);
+function IslandCarousel() {
+  const groupRef = useRef<THREE.Group>(null);
+  const [activeName, setActiveName] = useState<string | null>(null);
 
   return (
-    <motion.div
-      className="relative h-[60vh] min-w-[280px] md:min-w-[300px] cursor-pointer overflow-hidden rounded-2xl transition-all duration-500 snap-center"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02 }}
-    >
-      {/* 3D Canvas Container */}
-      <div className="absolute inset-0 z-0 bg-transparent">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_70%,rgba(175,143,111,0.15)_0%,rgba(248,244,225,0)_60%)]" />
-        
-        <Canvas camera={{ position: [0, 1, 4], near: 0.1, far: 1000, fov: 45 }}>
+    <group ref={groupRef} position={[-1, 0, 0]}> {/* pusat tiik map biar tengah */}
+      {ISLANDS.map((island, index) => (
+        <Island 
+          key={island.name} 
+          {...island} 
+          index={index} 
+          total={ISLANDS.length} 
+          activeName={activeName}
+          setActiveName={setActiveName}
+        />
+      ))}
+    </group>
+  );
+}
+
+export default function HeroPage() {
+  return (
+    <section className="relative w-full h-screen bg-[#F8F4E1] overflow-hidden">
+      <div className="absolute inset-0 z-20 pointer-events-none">
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 text-center z-20">
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-6xl md:text-8xl font-black text-[#543310] tracking-tighter uppercase"
+          >
+          Widyatara
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-[#74512D] italic font-serif text-lg tracking-widest mt-4"
+          >
+            Menjelajahi Budaya Indonesia dengan Widyatara
+          </motion.p>
+        </div>
+      </div>
+
+      {/* 3D Scene */}
+      <div className="absolute inset-0 z-10 overflow-hidden bg-[#F8F4E1]"> {/* atur camera awal */}
+        <Canvas shadows gl={{ antialias: true }} camera={{ position: [0, 0, 20], fov: 40 }}>
+          <OrbitControls 
+            makeDefault 
+            enablePan={true} 
+            minDistance={30} 
+            maxDistance={80}
+            maxPolarAngle={Math.PI / 2.5} // ga 360 atas bawah
+            minPolarAngle={0}
+            maxAzimuthAngle={Math.PI / 4} // 180 derajat max
+            minAzimuthAngle={-Math.PI / 4}
+          />
+          
           <ambientLight intensity={1.5} />
-          <hemisphereLight intensity={0.8} groundColor="#543310" />
-          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} />
-          <pointLight position={[-10, 10, -10]} intensity={1} />
+          <directionalLight position={[0, 100, 0]} intensity={2} castShadow />
           <Environment preset="city" />
-          <Suspense fallback={null}>
-            <Float 
-              speed={isHovered ? 0.5 : 9} // Slight movement even when not hovered
-              rotationIntensity={isHovered ? 0.2 : 0.1} 
-              floatIntensity={isHovered ? 0.2 : 0.1}
-            >
-              <Model url={modelUrl} />
-            </Float>
+
+          <Suspense fallback={<Html center><div className="bg-[#543310] text-[#F8F4E1] px-8 py-4 rounded-full font-bold shadow-2xl animate-pulse">Menyiapkan Peta Nusantara...</div></Html>}>
+            <group position={[-5, 0, 0]}> 
+              <IslandCarousel />
+            </group>
             <ContactShadows 
-              opacity={0.6} 
-              scale={12} 
-              blur={2.8} 
-              far={10} 
-              resolution={512} 
-              color="#543310"
-              position={[0, -0.01, 0]}
+              opacity={0.8} scale={150} blur={3} far={90} resolution={1024} color="#543310" position={[0, -0.2, 0]}
             />
           </Suspense>
-          {isHovered && <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={4} />}
         </Canvas>
       </div>
 
-      {/* Border */}
-      <div className={`absolute inset-0 border-2 transition-colors duration-500 rounded-2xl pointer-events-none ${isHovered ? 'border-[#543310]/30 shadow-2xl' : 'border-[#543310]/10 md:border-transparent'}`} />
-
-      {/* Text */}
-      <div className="absolute bottom-10 left-0 right-0 z-10 flex flex-col items-center justify-center p-6 text-center pointer-events-none">
-        {/* Mobile responsive */}
-        <div className="flex md:hidden flex-col items-center">
-          <div className="bg-[#543310]/90 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-[#AF8F6F]/30">
-            <h3 className="text-[#F8F4E1] text-lg font-bold tracking-wider uppercase">
-              {title}
-            </h3>
-          </div>
-          <div className="h-1 w-16 bg-[#AF8F6F] mt-2 rounded-full" />
-        </div>
-
-        {/* sesktop hover animation */}
-        <AnimatePresence>
-          {isHovered && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              className="hidden md:flex flex-col items-center"
-            >
-              <div className="bg-[#543310]/90 backdrop-blur-md px-6 py-3 rounded-full shadow-lg border border-[#AF8F6F]/30">
-                <h3 className="text-[#F8F4E1] text-xl font-bold tracking-wider uppercase">
-                  {title}
-                </h3>
-              </div>
-              <motion.div 
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                className="h-1 w-24 bg-[#AF8F6F] mt-2 rounded-full"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.05] md:opacity-[0.03]">
-        <div className="w-64 h-64 border-2 border-[#543310] rounded-full flex items-center justify-center">
-           <div className="w-56 h-56 border border-[#AF8F6F] rounded-full" />
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-
-// Preload models for the loading screen
-useGLTF.preload("/TariTradisional.glb");
-useGLTF.preload("/RumahTradisional.glb");
-useGLTF.preload("/AlatMusikTradisional.glb");
-
-export default function HeroPage() {
-  const items = [
-    {
-      title: "Tari Tradisional",
-      modelUrl: "/TariTradisional.glb",
-    },
-    {
-      title: "Rumah Adat Tradisional",
-      modelUrl: "/RumahTradisional.glb",
-    },
-    {
-      title: "Alat Musik Tradisional",
-      modelUrl: "/AlatMusikTradisional.glb",
-    },
-  ];
-
-  // Animation Variants
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const headerVariants: Variants = {
-    hidden: { opacity: 0, y: -20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 1, ease: "easeOut" }
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 30, scale: 0.9 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
-      transition: { 
-        duration: 0.8, 
-        ease: [0.16, 1, 0.3, 1] as any 
-      }
-    },
-  };
-
-  return (
-    <motion.section 
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      className="relative w-full min-h-screen bg-[#F8F4E1] flex flex-col items-center justify-center px-4 py-12 md:py-20 overflow-hidden"
-    >
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 0.05, scale: 1 }}
-        transition={{ duration: 2 }}
-        className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center"
-      >
-        <div className="w-[150vw] h-[150vw] border border-[#AF8F6F]/20 rounded-full" />
-      </motion.div>
-
-      <motion.div 
-        variants={headerVariants}
-        className="text-center mb-10 md:mb-18 z-10 md:mt-8"
-      >
-        <h1 className="text-4xl md:text-7xl font-bold text-[#543310] mb-4">
-          Widyatara
-        </h1>
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 1 }}
-          className="text-lg md:text-xl text-[#74512D] max-w-2xl mx-auto italic font-serif px-4"
-        >
-          Menjelajahi Kekayaan Budaya Nusantara dalam Dimensi Berbeda
-        </motion.p>
+      {/* UI Overlays */}
+      <div className="absolute bottom-10 left-0 right-0 z-20 flex flex-col items-center pointer-events-none">
         <motion.div 
-          initial={{ width: 0 }}
-          animate={{ width: "8rem" }}
-          transition={{ delay: 1, duration: 1 }}
-          className="h-1 bg-[#AF8F6F] mx-auto mt-6" 
-        />
-      </motion.div>
-
-      <motion.div 
-        variants={itemVariants}
-        className="w-full max-w-7xl z-10 px-4"
-      >
-        <div className="flex flex-row overflow-x-auto pb-8 gap-6 md:gap-8 md:flex-wrap md:justify-center md:overflow-visible snap-x snap-mandatory scrollbar-hide">
-          {items.map((item, index) => (
-            <motion.div 
-              key={index} 
-              variants={itemVariants}
-              className="flex-none w-[85vw] md:w-auto md:flex-1 snap-center"
-            >
-              <HeroItem title={item.title} modelUrl={item.modelUrl} />
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* hint */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.6 }}
-        transition={{ delay: 1.5, duration: 1 }}
-        className="mt-8 md:mt-12 text-[#543310] text-xs md:text-sm tracking-widest uppercase flex flex-col items-center gap-2"
-      >
-        <p className="md:hidden">Arahkan kursor untuk melihat detail</p>
-        <p className="md:hidden flex items-center gap-2">
-          <span>Geser untuk melihat lainnya</span>
-          <motion.span
-            animate={{ x: [0, 5, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            →
-          </motion.span>
-        </p>
-      </motion.div>
-    </motion.section>
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 0.6, y: 0 }}
+          transition={{ delay: 1 }}
+          className="flex flex-col items-center gap-2"
+        >
+          <div className="w-1 h-12 bg-gradient-to-b from-[#543310] to-transparent rounded-full" />
+          <p className="text-[#543310] text-[10px] tracking-[0.4em] uppercase font-bold">
+            Dekati Pulau Untuk Eksplorasi
+          </p>
+        </motion.div>
+      </div>
+    </section>
   );
 }
+
+// Preload the island models
+ISLANDS.forEach(island => useGLTF.preload(island.url));
