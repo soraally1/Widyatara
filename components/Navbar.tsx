@@ -28,13 +28,29 @@ const Navbar = () => {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
 
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      const currentScrollY = window.scrollY;
+
+      // Desktop background logic
+      setScrolled(currentScrollY > 20);
+
+      // Mobile hide/show logic
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false); // Scroll Down -> Hide
+      } else {
+        setIsVisible(true); // Scroll Up -> Show
+      }
+
+      setLastScrollY(currentScrollY);
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [lastScrollY]);
 
   // Animation Variants
   const containerVariants: Variants = {
@@ -65,8 +81,8 @@ const Navbar = () => {
           animate="visible"
           className={`pointer-events-auto relative flex items-center gap-4 px-4 py-2.5 rounded-full transition-all duration-500 ${
             scrolled
-              ? "bg-[#F8F4E1]/90 backdrop-blur-2xl border border-[#AF8F6F]/20 shadow-[0_8px_32px_rgba(84,51,16,0.12)]"
-              : "bg-[#F8F4E1]/40 backdrop-blur-lg border border-[#AF8F6F]/10 shadow-sm"
+              ? "bg-[#F8F4E1]/60 backdrop-blur-3xl backdrop-saturate-180 border border-[#F8F4E1]/50 shadow-[0_8px_32px_rgba(31,38,135,0.1)] ring-1 ring-white/30"
+              : "bg-[#F8F4E1]/30 backdrop-blur-2xl backdrop-saturate-180 border border-[#F8F4E1]/20 shadow-lg ring-1 ring-white/20"
           }`}
         >
           {/* Logo Section */}
@@ -74,14 +90,14 @@ const Navbar = () => {
             <motion.div
               variants={itemVariants}
               whileHover={{ scale: 1.05 }}
-              className="flex items-center justify-center bg-white/60 w-16 h-16 rounded-full shadow-inner border border-[#AF8F6F]/10 overflow-hidden cursor-pointer"
+              className="flex items-center justify-center bg-white w-[70px] h-[70px] rounded-full shadow-inner border border-[#AF8F6F]/10 overflow-hidden cursor-pointer"
             >
               <Image
                 src="/assets/widyatara-logo.png"
                 alt="Widyatara Logo"
-                width={160}
-                height={160}
-                className="object-contain p-2"
+                width={500}
+                height={500}
+                className="object-contain"
                 priority
               />
             </motion.div>
@@ -177,12 +193,15 @@ const Navbar = () => {
         <motion.div
           className="relative bg-[#F8F4E1]/80 backdrop-blur-3xl border border-[#AF8F6F]/20 shadow-[0_20px_50px_rgba(84,51,16,0.2)] rounded-[35px] px-3 py-2 flex items-center justify-around"
           initial={{ y: 100, opacity: 0, scale: 0.8 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
+          animate={{
+            y: isVisible ? 0 : 200, // Slide down if not visible
+            opacity: isVisible ? 1 : 0,
+            scale: isVisible ? 1 : 0.8,
+          }}
           transition={{
             type: "spring",
             stiffness: 260,
             damping: 25,
-            delay: 0.2,
           }}
         >
           {[
