@@ -9,10 +9,10 @@ import { MoveRight } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <main className="w-full min-h-screen flex flex-col relative overflow-hidden md:pt-20">
+    <main className="w-full min-h-screen flex flex-col relative overflow-hidden md:pt-36">
       {/* Background Decorative Blobs */}
-      <div className="absolute top-[-5%] left-[-5%] w-[50%] h-[50%] bg-accent/40 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-5%] right-[-5%] w-[50%] h-[50%] bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="hidden md:block absolute top-[-5%] left-[-5%] w-[50%] h-[50%] bg-accent/40 rounded-full blur-[100px] pointer-events-none" />
+      <div className="hidden md:block absolute bottom-[-5%] right-[-5%] w-[50%] h-[50%] bg-accent/5 rounded-full blur-[100px] pointer-events-none" />
       <Navbar />
       <div className="grow flex items-center justify-center px-6 py-12 md:py-24 relative z-10">
         <div className="max-w-5xl w-full flex flex-col md:flex-row items-center gap-10 md:gap-16 text-center md:text-left">
@@ -31,7 +31,13 @@ export default function NotFound() {
                   loop
                   muted
                   playsInline
-                  className="w-48 sm:w-64 md:w-80 lg:w-[420px] h-auto drop-shadow-[0_20px_50px_rgba(84,51,16,0.25)] transition-transform duration-500 group-hover:scale-105 [clip-path:inset(5%_0)]"
+                  className="w-48 sm:w-64 md:w-80 lg:w-[420px] h-auto transition-transform duration-500 group-hover:scale-105 [clip-path:inset(3%_0)]"
+                  style={{
+                    maskImage:
+                      "linear-gradient(to bottom, transparent, black 10%, black 90%, transparent), linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+                    maskComposite: "intersect",
+                    WebkitMaskComposite: "source-in",
+                  }}
                 />
               </div>
 
