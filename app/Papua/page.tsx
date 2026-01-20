@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useTransitionContext } from "@/components/TransitionContext";
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 
 export default function PapuaSelectionPage() {
     const router = useRouter();
@@ -14,6 +17,13 @@ export default function PapuaSelectionPage() {
     const [hoveredGame, setHoveredGame] = useState<string | null>(null);
     const [activeGameIndex, setActiveGameIndex] = useState(0); // 0: Kayu Malele, 1: Papeda
     const [isMobile, setIsMobile] = useState(false);
+    const [step, setStep] = useState(0);
+
+    const containerVariants = {
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -20 },
+    };
 
     // Refs for 3D state to avoid re-renders triggering useEffect re-init
     const sceneRef = useRef<THREE.Scene | null>(null);
@@ -368,125 +378,200 @@ export default function PapuaSelectionPage() {
                 }}
             />
 
-            {/* Header - Minimalist */}
-            {/* Header - Minimalist - Positioned below navbar */}
-            <div className="absolute top-24 md:top-32 w-full text-center pointer-events-none z-10">
-                <h1 className="text-3xl md:text-6xl font-extrabold text-[#3D2817] tracking-tight mb-2 
-                               drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
-                    Belajar Budaya Papua
-                </h1>
-                <div className="flex items-center justify-center gap-3 mt-3">
-                    <div className="h-[2px] w-12 bg-gradient-to-r from-transparent via-[#8B5A2B] to-transparent opacity-50"></div>
-                    <p className="text-[#8B5A2B] text-sm md:text-base tracking-[0.3em] uppercase font-semibold opacity-70">
-                        Pilih Permainan
-                    </p>
-                    <div className="h-[2px] w-12 bg-gradient-to-r from-transparent via-[#8B5A2B] to-transparent opacity-50"></div>
-                </div>
-            </div>
+            <AnimatePresence mode="wait">
+                {step === 0 ? (
+                    <div key="intro" className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-[#FFF8E7]/40 backdrop-blur-[2px]">
+                        <motion.div
+                            variants={containerVariants}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            className="max-w-4xl w-full bg-white/80 backdrop-blur-md rounded-3xl overflow-hidden shadow-2xl border border-[#8B5A2B]/20 flex flex-col md:flex-row"
+                        >
+                            {/* Image Section */}
+                            <div className="md:w-1/3 bg-[#8B5A2B]/10 flex items-center justify-center p-8 relative overflow-hidden">
+                                <div className="absolute inset-0 opacity-10">
+                                    <div className="absolute top-0 left-0 w-32 h-32 bg-[#8B5A2B] rounded-full -translate-x-16 -translate-y-16 blur-3xl"></div>
+                                    <div className="absolute bottom-0 right-0 w-32 h-32 bg-[#D4A373] rounded-full translate-x-16 translate-y-16 blur-3xl"></div>
+                                </div>
+                                <motion.div
+                                    animate={{ y: [0, -10, 0] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                >
+                                    <Image
+                                        src="/assets/Sulawesi/game1/Thinking.png"
+                                        alt="Thinking Mascot"
+                                        width={300}
+                                        height={300}
+                                        className="relative z-10 object-contain"
+                                    />
+                                </motion.div>
+                            </div>
 
-            {/* Dynamic Text Labels - Side Panel */}
-            <div className="absolute inset-0 pointer-events-none z-10">
-                {/* Kayu Malele Label - Right of Left Model */}
-                {(hoveredGame === 'kayu-malele' || (isMobile && activeGameIndex === 0)) && (
-                    <div
-                        className="absolute 
-                                   left-1/2 -translate-x-1/2 top-auto bottom-50
-                                   md:left-[35%] md:top-1/2 md:-translate-y-1/2 md:translate-x-0 md:bottom-auto
-                                   max-w-md md:max-w-lg
-                                   transition-all duration-500 ease-out animate-[slideInRight_0.4s_ease-out]"
+                            {/* Content Section */}
+                            <div className="md:w-2/3 p-8 md:p-12 flex flex-col justify-center">
+                                <h1 className="text-4xl md:text-5xl font-bold text-[#3D2817] mb-6" style={{ fontFamily: 'var(--font-cormorant), serif' }}>
+                                    Jelajahi Pulau Papua
+                                </h1>
+                                <div className="space-y-4 text-[#3D2817]/80 leading-relaxed mb-8">
+                                    <p>
+                                        Papua, tanah matahari terbit di ufuk timur Indonesia, adalah rumah bagi keragaman budaya yang luar biasa. 
+                                        Dari pegunungan Jayawijaya yang bersalju hingga pesisir pantai yang kaya akan sumber daya alam, Papua menyimpan sejarah panjang peradaban yang harmonis dengan alam.
+                                    </p>
+                                    <p>
+                                        Dikenal dengan burung Cendrawasih yang ikonik dan tradisi seni ukir Asmat yang mendunia. 
+                                        Mari kita jelajahi kekayaan geografi, tradisi unik, dan kehangatan penduduk Papua melalui petualangan seru ini!
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => setStep(1)}
+                                    className="w-full md:w-max px-8 py-4 bg-[#3D2817] text-[#FFF8E7] rounded-full font-bold hover:bg-[#5A3E2B] transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 group"
+                                >
+                                    Mulai Petualangan
+                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                ) : (
+                    <motion.div
+                        key="selection"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-10"
                     >
-                        <div className="bg-white/95 backdrop-blur-sm px-5 py-4 rounded-2xl shadow-xl space-y-2">
-                            <h2
-                                style={{ fontFamily: 'var(--font-plus-jakarta), sans-serif' }}
-                                className="text-2xl md:text-3xl font-black text-[#3D2817] uppercase text-center md:text-left">
-                                Kayu Malele
-                            </h2>
-                            <p
-                                style={{ fontFamily: 'var(--font-plus-jakarta), sans-serif' }}
-                                className="text-sm md:text-base text-[#5A3E2B] leading-relaxed text-center md:text-left">
-                                Permainan tradisional melempar dan menangkap kayu.
+                        {/* Header - Minimalist */}
+                        <div className="absolute top-24 md:top-32 w-full text-center pointer-events-none z-10">
+                            <h1 className="text-3xl md:text-6xl font-extrabold text-[#3D2817] tracking-tight mb-2 
+                                           drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
+                                Belajar Budaya Papua
+                            </h1>
+                            <div className="flex items-center justify-center gap-3 mt-3">
+                                <div className="h-[2px] w-12 bg-gradient-to-r from-transparent via-[#8B5A2B] to-transparent opacity-50"></div>
+                                <p className="text-[#8B5A2B] text-sm md:text-base tracking-[0.3em] uppercase font-semibold opacity-70">
+                                    Pilih Permainan
+                                </p>
+                                <div className="h-[2px] w-12 bg-gradient-to-r from-transparent via-[#8B5A2B] to-transparent opacity-50"></div>
+                            </div>
+                        </div>
+
+                        {/* Dynamic Text Labels - Side Panel */}
+                        <div className="absolute inset-0 pointer-events-none z-10">
+                            {/* Kayu Malele Label - Right of Left Model */}
+                            {(hoveredGame === 'kayu-malele' || (isMobile && activeGameIndex === 0)) && (
+                                <div
+                                    className="absolute 
+                                               left-1/2 -translate-x-1/2 top-auto bottom-50
+                                               md:left-[35%] md:top-1/2 md:-translate-y-1/2 md:translate-x-0 md:bottom-auto
+                                               max-w-md md:max-w-lg
+                                               transition-all duration-500 ease-out animate-[slideInRight_0.4s_ease-out]"
+                                >
+                                    <div className="bg-white/95 backdrop-blur-sm px-5 py-4 rounded-2xl shadow-xl space-y-2">
+                                        <h2
+                                            style={{ fontFamily: 'var(--font-plus-jakarta), sans-serif' }}
+                                            className="text-2xl md:text-3xl font-black text-[#3D2817] uppercase text-center md:text-left">
+                                            Kayu Malele
+                                        </h2>
+                                        <p
+                                            style={{ fontFamily: 'var(--font-plus-jakarta), sans-serif' }}
+                                            className="text-sm md:text-base text-[#5A3E2B] leading-relaxed text-center md:text-left">
+                                            Permainan tradisional melempar dan menangkap kayu.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Papeda Label - Right of Right Model */}
+                            {(hoveredGame === 'papeda' || (isMobile && activeGameIndex === 1)) && (
+                                <div
+                                    className="absolute
+                                               left-1/2 -translate-x-1/2 top-auto bottom-50
+                                               md:left-[85%] md:top-1/2 md:-translate-y-1/2 md:translate-x-0 md:bottom-auto
+                                               max-w-md md:max-w-lg
+                                               transition-all duration-500 ease-out animate-[slideInRight_0.4s_ease-out]"
+                                >
+                                    <div className="bg-white/95 backdrop-blur-sm px-5 py-4 rounded-2xl shadow-xl space-y-2">
+                                        <h2
+                                            style={{ fontFamily: 'var(--font-plus-jakarta), sans-serif' }}
+                                            className="text-2xl md:text-3xl font-black text-[#3D2817] uppercase text-center md:text-left">
+                                            Papeda
+                                        </h2>
+                                        <p
+                                            style={{ fontFamily: 'var(--font-plus-jakarta), sans-serif' }}
+                                            className="text-sm md:text-base text-[#5A3E2B] leading-relaxed text-center md:text-left">
+                                            Belajar membuat makanan khas Papua dari sagu.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Mobile Swipe Indicators & Button - Enhanced */}
+                        <div className="md:hidden absolute bottom-8 w-full flex flex-col items-center gap-5 z-20 pointer-events-auto">
+                            {/* Swipe Dots */}
+                            <div className="flex gap-3 mb-1">
+                                <div className={`h-2.5 rounded-full transition-all duration-300 ${activeGameIndex === 0 ? 'w-8 bg-[#3D2817]' : 'w-2.5 bg-[#3D2817]/30'
+                                    }`} />
+                                <div className={`h-2.5 rounded-full transition-all duration-300 ${activeGameIndex === 1 ? 'w-8 bg-[#3D2817]' : 'w-2.5 bg-[#3D2817]/30'
+                                    }`} />
+                            </div>
+
+                            {/* Play Button */}
+                            <button
+                                onClick={handlePlay}
+                                className="relative bg-[#3D2817] text-[#FFF8E7] px-10 py-4 rounded-full 
+                                         font-bold text-lg shadow-[0_8px_24px_rgba(61,40,23,0.3)]
+                                         active:scale-95 transition-all duration-200
+                                         before:absolute before:inset-0 before:rounded-full 
+                                         before:bg-gradient-to-t before:from-black/20 before:to-transparent
+                                         hover:shadow-[0_12px_32px_rgba(61,40,23,0.4)]"
+                            >
+                                <span className="relative z-10 tracking-wider">MAIN SEKARANG</span>
+                            </button>
+
+                            {/* Swipe Hint */}
+                            <p className="text-[#8B5A2B] text-xs opacity-60 tracking-wide">
+                                ← Geser untuk ganti game →
                             </p>
                         </div>
-                    </div>
-                )}
 
-                {/* Papeda Label - Right of Right Model */}
-                {(hoveredGame === 'papeda' || (isMobile && activeGameIndex === 1)) && (
-                    <div
-                        className="absolute
-                                   left-1/2 -translate-x-1/2 top-auto bottom-50
-                                   md:left-[85%] md:top-1/2 md:-translate-y-1/2 md:translate-x-0 md:bottom-auto
-                                   max-w-md md:max-w-lg
-                                   transition-all duration-500 ease-out animate-[slideInRight_0.4s_ease-out]"
-                    >
-                        <div className="bg-white/95 backdrop-blur-sm px-5 py-4 rounded-2xl shadow-xl space-y-2">
-                            <h2
-                                style={{ fontFamily: 'var(--font-plus-jakarta), sans-serif' }}
-                                className="text-2xl md:text-3xl font-black text-[#3D2817] uppercase text-center md:text-left">
-                                Papeda
-                            </h2>
-                            <p
-                                style={{ fontFamily: 'var(--font-plus-jakarta), sans-serif' }}
-                                className="text-sm md:text-base text-[#5A3E2B] leading-relaxed text-center md:text-left">
-                                Belajar membuat makanan khas Papua dari sagu.
+                        {/* Back Button - Minimalist */}
+                        <div className="absolute top-6 left-6 z-20 pointer-events-auto">
+                            <button
+                                onClick={() => router.back()}
+                                className="group relative bg-white/40 hover:bg-white/60 backdrop-blur-md 
+                                         text-[#3D2817] p-3 rounded-full transition-all duration-300
+                                         shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]
+                                         border border-white/50"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    className="h-6 w-6 transition-transform duration-300 group-hover:-translate-x-1"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Desktop Hover Hint */}
+                        <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+                            <p className="text-[#8B5A2B] text-sm opacity-50 tracking-wide text-center animate-pulse">
+                                Arahkan kursor ke model untuk melihat detail
                             </p>
                         </div>
-                    </div>
+
+                        <motion.button
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            onClick={() => setStep(0)}
+                            className="absolute bottom-4 right-8 z-20 text-[#3D2817] hover:underline font-bold pointer-events-auto"
+                        >
+                            ← Kembali ke Penjelasan
+                        </motion.button>
+                    </motion.div>
                 )}
-            </div>
-
-            {/* Mobile Swipe Indicators & Button - Enhanced */}
-            <div className="md:hidden absolute bottom-8 w-full flex flex-col items-center gap-5 z-20 pointer-events-auto">
-                {/* Swipe Dots */}
-                <div className="flex gap-3 mb-1">
-                    <div className={`h-2.5 rounded-full transition-all duration-300 ${activeGameIndex === 0 ? 'w-8 bg-[#3D2817]' : 'w-2.5 bg-[#3D2817]/30'
-                        }`} />
-                    <div className={`h-2.5 rounded-full transition-all duration-300 ${activeGameIndex === 1 ? 'w-8 bg-[#3D2817]' : 'w-2.5 bg-[#3D2817]/30'
-                        }`} />
-                </div>
-
-                {/* Play Button */}
-                <button
-                    onClick={handlePlay}
-                    className="relative bg-[#3D2817] text-[#FFF8E7] px-10 py-4 rounded-full 
-                             font-bold text-lg shadow-[0_8px_24px_rgba(61,40,23,0.3)]
-                             active:scale-95 transition-all duration-200
-                             before:absolute before:inset-0 before:rounded-full 
-                             before:bg-gradient-to-t before:from-black/20 before:to-transparent
-                             hover:shadow-[0_12px_32px_rgba(61,40,23,0.4)]"
-                >
-                    <span className="relative z-10 tracking-wider">MAIN SEKARANG</span>
-                </button>
-
-                {/* Swipe Hint */}
-                <p className="text-[#8B5A2B] text-xs opacity-60 tracking-wide">
-                    ← Geser untuk ganti game →
-                </p>
-            </div>
-
-            {/* Back Button - Minimalist */}
-            <div className="absolute top-6 left-6 z-20 pointer-events-auto">
-                <button
-                    onClick={() => router.back()}
-                    className="group relative bg-white/40 hover:bg-white/60 backdrop-blur-md 
-                             text-[#3D2817] p-3 rounded-full transition-all duration-300
-                             shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]
-                             border border-white/50"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6 transition-transform duration-300 group-hover:-translate-x-1"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                </button>
-            </div>
-
-            {/* Desktop Hover Hint */}
-            <div className="hidden md:block absolute bottom-8 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
-                <p className="text-[#8B5A2B] text-sm opacity-50 tracking-wide text-center animate-pulse">
-                    Arahkan kursor ke model untuk melihat detail
-                </p>
-            </div>
+            </AnimatePresence>
         </div >
     );
 }

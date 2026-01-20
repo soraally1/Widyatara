@@ -8,7 +8,7 @@ const GameHeader: React.FC = () => {
     <motion.div 
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="z-10 text-center mb-6"
+      className="z-10 text-center mb-6 mt-28"
     >
       <h1 className="text-4xl md:text-6xl font-black text-[var(--primary)] mb-2 tracking-tighter">
         RUMAH GADANG BUILDER

@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { AnimatePresence } from "framer-motion";
-
 import { Piece, GameState } from "./types";
 import { PIECES_DATA } from "./constants";
-
 import GameHeader from "./components/GameHeader";
 import GameTimer from "./components/GameTimer";
 import TargetOutlines from "./components/TargetOutlines";
