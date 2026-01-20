@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTransitionContext } from "@/components/TransitionContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, MapPin } from "lucide-react";
 
@@ -36,6 +38,8 @@ const ISLANDS = [
 ];
 
 export default function NusantaraPage() {
+  const router = useRouter();
+  const { triggerTransition } = useTransitionContext();
   const [selectedIsland, setSelectedIsland] = useState<string | null>(null);
   const [hoveredIsland, setHoveredIsland] = useState<string | null>(null);
 
@@ -197,7 +201,7 @@ export default function NusantaraPage() {
                    transition-all duration-300
                    flex items-center gap-2
                  "
-                onClick={() => console.log(`Navigating to ${selectedIsland}`)}
+                onClick={() => window.location.href = `/${selectedIsland}`}
               >
                 <span className="uppercase tracking-widest text-[10px] md:text-xs font-black">
                   Jelajahi
