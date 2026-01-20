@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import HeroPage from "@/components/HeroPage";
+import HeroPage from "@/app/HeroPage";
 import LoadingScreen from "@/components/LoadingScreen";
 import { AnimatePresence, motion } from "framer-motion";
 
